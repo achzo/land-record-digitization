@@ -1,0 +1,55 @@
+# ==============================================================================
+# Kannada Handwriting OCR Baseline Configuration
+# Framework: HuggingFace VisionEncoderDecoder / TrOCR + PyTorch
+# ==============================================================================
+
+dataset:
+  # Base directory for relative image paths (leave empty if paths are absolute)
+  dataset_root: ""
+  # Manifest paths (supports both .json and .jsonl files)
+  train_manifest: ""
+  validation_manifest: ""
+  test_manifest: ""
+  # When true, verified active-learning human annotations can be mixed into training
+  allow_active_learning: false
+  # Safety: enforce human ground-truth filter for any active learning samples
+  strict_human_verified_only: true
+
+model:
+  # Base pre-trained model architecture (e.g. microsoft/trocr-base-handwritten, microsoft/trocr-small-stage1)
+  base_model: "microsoft/trocr-base-handwritten"
+  # Optional override tokenizer identifier (if different from base model)
+  tokenizer_name: "models/kannada_trocr/tokenizer/kannada_v1"
+  # Maximum sequence length for Kannada transcriptions
+  max_target_length: 64
+
+training:
+  # Output path where candidate checkpoints and metadata will be saved
+  output_dir: "models/kannada_trocr/candidates"
+  # Hyperparameters
+  learning_rate: 0.00005 # 5e-5
+  weight_decay: 0.01
+  epochs: 5
+  batch_size: 4 # Per-device training batch size
+  eval_batch_size: 4
+  gradient_accumulation_steps: 1
+  warmup_ratio: 0.1
+  # Hardware & precision
+  fp16: true
+  dataloader_num_workers: 2
+  # Checkpointing & evaluation schedule
+  save_total_limit: 2
+  logging_steps: 10
+  eval_strategy: "epoch"
+  save_strategy: "epoch"
+  load_best_model_at_end: true
+  metric_for_best_model: "cer"
+  greater_is_better: false
+  early_stopping_patience: 3
+
+inference:
+  # Beam search settings
+  num_beams: 5
+  max_length: 64
+  early_stopping: true
+  length_penalty: 1.0

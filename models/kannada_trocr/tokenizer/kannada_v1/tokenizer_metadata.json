@@ -1,0 +1,16 @@
+{
+  "version": "kannada_v1",
+  "base_tokenizer": "microsoft/trocr-base-handwritten",
+  "base_vocab_size": 50265,
+  "new_vocab_size": 50342,
+  "added_tokens": 77,
+  "dataset_manifest": "canonical_kannada_inventory",
+  "created_at": "2026-09-11T10:37:27.710688+00:00",
+  "unicode_normalization": "NFC",
+  "special_tokens": {
+    "bos_token_id": 0,
+    "pad_token_id": 1,
+    "eos_token_id": 2,
+    "unk_token_id": 3
+  }
+}

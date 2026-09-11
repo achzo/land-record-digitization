@@ -1,53 +1,60 @@
 import React from "react";
 import { DocumentStatus } from "@/lib/types";
-import { Clock, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ShieldCheck, Loader2, FileCheck2, AlertTriangle } from "lucide-react";
 
 interface StatusBadgeProps {
   status: DocumentStatus;
   className?: string;
+  showIcon?: boolean;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = "" }) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({
+  status,
+  className = "",
+  showIcon = true,
+}) => {
   switch (status) {
-    case "UPLOADED":
+    case "COMPLETED":
       return (
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 ${className}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-[#D1FAE5] text-[#065F46] border border-[#A7F3D0] ${className}`}
         >
-          <Clock className="w-3.5 h-3.5" />
-          Uploaded
+          {showIcon && <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />}
+          Digitally Verified
         </span>
       );
     case "PROCESSING":
       return (
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse ${className}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] ${className}`}
         >
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          Processing
+          {showIcon && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#D97706]" />}
+          Processing Record
         </span>
       );
-    case "COMPLETED":
+    case "UPLOADED":
       return (
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 ${className}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-[#DFF3EF] text-[#0F766E] border border-[#99F6E4] ${className}`}
         >
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-          Completed
+          {showIcon && <FileCheck2 className="w-3.5 h-3.5 text-[#0F766E]" />}
+          Document Received
         </span>
       );
     case "FAILED":
       return (
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 ${className}`}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold bg-[#FEE2E2] text-[#991B1B] border border-[#FECACA] ${className}`}
         >
-          <AlertCircle className="w-3.5 h-3.5" />
-          Failed
+          {showIcon && <AlertTriangle className="w-3.5 h-3.5 text-[#DC2626]" />}
+          Verification Failed
         </span>
       );
     default:
       return (
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ${className}`}>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 ${className}`}
+        >
           {status}
         </span>
       );

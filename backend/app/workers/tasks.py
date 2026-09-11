@@ -9,6 +9,7 @@ from app.models.document import Document
 from app.models.extraction import ExtractionResult
 from app.models.extracted_field import ExtractedField
 from app.services.minio_storage import minio_storage
+from app.services.active_learning_storage import al_storage_manager
 from app.pipeline.processor import get_document_processor
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,19 @@ def process_document_task(self, document_id: int):
         db.execute(delete(ExtractedField).where(ExtractedField.document_id == document_id))
         
         for f in pipeline_result.fields:
+            review_status = getattr(f, "review_status", "UNREVIEWED")
+            lang_script = getattr(f, "language_script", None)
+            
+            # Low-confidence threshold routing for Kannada handwriting
+            if f.confidence_score < 0.80 and (lang_script in ("kannada_handwritten", None) or review_status == "PENDING_REVIEW"):
+                review_status = "PENDING_REVIEW"
+                if not lang_script:
+                    lang_script = "kannada_handwritten"
+
+            crop_bytes = getattr(f, "crop_image_bytes", None)
+            model_ver = getattr(f, "model_version", "kannada-trocr-prod-v1.0")
+            prep_ver = getattr(f, "preprocessing_version", "person-a-v1.0")
+
             field_record = ExtractedField(
                 document_id=document_id,
                 field_name=f.field_name,
@@ -84,8 +98,30 @@ def process_document_task(self, document_id: int):
                 confidence_score=f.confidence_score,
                 source_page=f.source_page,
                 bounding_box=f.bounding_box.model_dump() if f.bounding_box else None,
+                review_status=review_status,
+                candidates=getattr(f, "candidates", None),
+                language_script=lang_script,
+                model_version=model_ver,
+                preprocessing_version=prep_ver,
             )
             db.add(field_record)
+            db.flush()
+
+            if review_status == "PENDING_REVIEW":
+                sample_id = f"doc_{document_id}_field_{field_record.id}"
+                sample_info = al_storage_manager.save_pending_sample(
+                    sample_id=sample_id,
+                    document_id=document_id,
+                    field_id=field_record.id,
+                    image_bytes=crop_bytes,
+                    original_ocr_prediction=f.original_value or "",
+                    beam_candidates=getattr(f, "candidates", []),
+                    confidence=f.confidence_score,
+                    model_version=model_ver,
+                    preprocessing_version=prep_ver,
+                )
+                if sample_info.get("crop_image_path"):
+                    field_record.crop_image_path = sample_info["crop_image_path"]
 
         # 7. Update document status to COMPLETED
         document.status = "COMPLETED"

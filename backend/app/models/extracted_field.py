@@ -52,6 +52,41 @@ class ExtractedField(Base):
         nullable=True,
         doc="Coordinates on page: {'x_min': float, 'y_min': float, 'x_max': float, 'y_max': float}",
     )
+    # Active Learning & Human-in-the-Loop review tracking
+    review_status: Mapped[str] = mapped_column(
+        String(50),
+        default="UNREVIEWED",
+        nullable=False,
+        index=True,
+        doc="UNREVIEWED, PENDING_REVIEW, VERIFIED, EDITED, REJECTED",
+    )
+    candidates: Mapped[Optional[Any]] = mapped_column(
+        JSON,
+        nullable=True,
+        doc="Beam candidate alternatives: [{'text': str, 'score': float}]",
+    )
+    language_script: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        default="kannada_handwritten",
+        nullable=True,
+        index=True,
+        doc="Classification e.g. kannada_handwritten, english_handwritten, printed",
+    )
+    crop_image_path: Mapped[Optional[str]] = mapped_column(
+        String(500),
+        nullable=True,
+        doc="Path or MinIO object key for isolated character/word crop",
+    )
+    model_version: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        doc="Model checkpoint tag used for original inference",
+    )
+    preprocessing_version: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        doc="Preprocessing & segmentation pipeline version",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -61,6 +96,14 @@ class ExtractedField(Base):
 
     # Relationship back to Document
     document = relationship("Document", back_populates="extracted_fields")
+
+    # 1-to-1 Relationship with ActiveLearningSample (strictly for verified ground truth)
+    active_learning_sample = relationship(
+        "ActiveLearningSample",
+        back_populates="extracted_field",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return (

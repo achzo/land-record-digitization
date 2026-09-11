@@ -1,369 +1,422 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { DocumentItem, DocumentSearchItem } from "@/lib/types";
-import { fetchDocuments, searchDocuments, deleteDocumentRecord, getDirectDownloadUrl } from "@/lib/api";
-import { StatusBadge } from "@/components/status-badge";
+import { LandRecord } from "@/lib/types";
+import { searchLandRecords } from "@/lib/api";
 import {
-  FileText,
-  Upload,
-  RefreshCw,
   Search,
-  ExternalLink,
-  Download,
-  Trash2,
+  UploadCloud,
+  FileText,
+  ShieldCheck,
   CheckCircle2,
   Clock,
-  Loader2,
-  AlertTriangle,
-  Tag,
-  X,
+  ArrowRight,
+  Sparkles,
+  Award,
+  Layers,
+  PhoneCall,
+  Download,
+  Building2,
+  Lock,
+  ExternalLink,
+  ChevronRight,
+  FileCheck2,
+  HelpCircle,
+  QrCode,
 } from "lucide-react";
 
-export default function DashboardPage() {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [searchResults, setSearchResults] = useState<DocumentSearchItem[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+export default function HomePage() {
+  const [featuredRecords, setFeaturedRecords] = useState<LandRecord[]>([]);
 
-  const loadDocuments = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await fetchDocuments();
-      setDocuments(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to load documents from backend.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function loadInitial() {
+      try {
+        const records = await searchLandRecords({ search_type: "survey", query: "" });
+        setFeaturedRecords(records);
+      } catch (e) {
+        console.error("Failed to load initial records:", e);
+      }
     }
+    loadInitial();
   }, []);
 
-  useEffect(() => {
-    loadDocuments();
-
-    // Auto-poll every 3 seconds if any document is in non-terminal state
-    const interval = setInterval(() => {
-      const hasActiveJobs = documents.some(
-        (doc) => doc.status === "UPLOADED" || doc.status === "PROCESSING"
-      );
-      if (hasActiveJobs && !searchTerm.trim()) {
-        loadDocuments();
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [loadDocuments, documents, searchTerm]);
-
-  // Debounced backend search for filename and extracted fields
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setSearchResults(null);
-      setSearching(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const filter = statusFilter !== "ALL" ? statusFilter : undefined;
-        const res = await searchDocuments(searchTerm.trim(), undefined, filter);
-        setSearchResults(res.results);
-      } catch (err: any) {
-        console.error("Search error:", err);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm, statusFilter]);
-
-  const handleDelete = async (id: number, filename: string) => {
-    if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
-    try {
-      setDeletingId(id);
-      await deleteDocumentRecord(id);
-      setDocuments((prev) => prev.filter((d) => d.id !== id));
-      if (searchResults) {
-        setSearchResults((prev) => prev?.filter((d) => d.id !== id) || null);
-      }
-    } catch (err: any) {
-      alert(`Error deleting document: ${err.message}`);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const totalCount = documents.length;
-  const completedCount = documents.filter((d) => d.status === "COMPLETED").length;
-  const processingCount = documents.filter(
-    (d) => d.status === "PROCESSING" || d.status === "UPLOADED"
-  ).length;
-  const failedCount = documents.filter((d) => d.status === "FAILED").length;
-
-  const displayList = searchResults
-    ? searchResults
-    : statusFilter === "ALL"
-    ? documents
-    : documents.filter((d) => d.status === statusFilter);
-
   return (
-    <div className="space-y-8">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Documents Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Search documents across filenames and extracted fields (vendors, amounts, invoice numbers).
+    <div className="space-y-16 pb-12">
+      {/* 1. HERO SECTION */}
+      <section className="relative pt-4 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Left Hero Content */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* National Mission Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#DFF3EF] text-[#0F766E] border border-[#99F6E4] text-xs font-bold uppercase tracking-wider">
+              <span className="w-2 h-2 rounded-full bg-[#0F766E]" />
+              National Digital Land Mission
+            </div>
+
+            {/* Main Headline */}
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#12304A] tracking-tight leading-[1.15]">
+                Access Your Land Records Digitally
+              </h1>
+              <p className="text-base sm:text-lg text-[#475569] leading-relaxed max-w-xl">
+                Search, verify, and digitize your official land records securely from anywhere with spatial Indic AI document intelligence.
+              </p>
+            </div>
+
+            {/* Hero CTAs */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link
+                href="/search"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded text-sm font-bold text-white bg-[#0F766E] hover:bg-[#0D655E] shadow-sm transition-all"
+              >
+                <Search className="w-4 h-4" />
+                <span>Search Land Record</span>
+              </Link>
+              <Link
+                href="/digitize"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded text-sm font-bold text-[#12304A] bg-white border border-[#CBD5E1] hover:bg-[#FAF9F5] hover:border-[#94A3B8] shadow-xs transition-all"
+              >
+                <UploadCloud className="w-4 h-4 text-[#0F766E]" />
+                <span>Digitize Old Document</span>
+              </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-[#475569] border-t border-[#E2E8F0]">
+              <div className="flex items-center gap-1.5 font-medium">
+                <ShieldCheck className="w-4 h-4 text-[#059669]" />
+                <span>NIC Certified Security</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-medium">
+                <Award className="w-4 h-4 text-[#059669]" />
+                <span>Legally Admissible Proof</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-medium">
+                <Lock className="w-4 h-4 text-[#059669]" />
+                <span>SHA-256 Anti-Tamper Signatures</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Hero Preview Card: Digital Title Record */}
+          <div className="lg:col-span-5">
+            <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+              {/* Card Header Strip */}
+              <div className="bg-[#12304A] text-white px-5 py-3 flex items-center justify-between border-b border-[#1E4264]">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-[#0F766E] flex items-center justify-center text-[10px] font-bold text-white">
+                    ಭೂ
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold tracking-tight">Digital Title Record (RoR)</h3>
+                    <p className="text-[10px] text-slate-300">Govt. of Karnataka &bull; Revenue Dept.</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#D1FAE5] text-[#065F46]">
+                  Verified
+                </span>
+              </div>
+
+              {/* Record Summary Table */}
+              <div className="p-5 space-y-4 text-xs">
+                <div className="grid grid-cols-2 gap-3 pb-3 border-b border-[#E2E8F0]">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#475569]">RoR Record No.</span>
+                    <p className="font-mono font-bold text-[#12304A] mt-0.5">ROR-KA-2026-98124</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#475569]">Survey / Khasra No.</span>
+                    <p className="font-mono font-bold text-[#12304A] mt-0.5">142/3A (Hissa 1)</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pb-3 border-b border-[#E2E8F0]">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#475569]">Primary Land Owner</span>
+                    <p className="font-semibold text-[#12304A] text-sm">B. R. Shivashankaraiah</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#475569]">Taluk & Village</span>
+                      <p className="text-[#12304A]">Bidadi, Ramanagara</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#475569]">Land Extent</span>
+                      <p className="text-[#12304A] font-semibold">2 Acres 14 Guntas</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-[#475569] bg-[#FAF9F5] p-2.5 rounded border border-[#E2E8F0]">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#059669]" />
+                    <span>Issuing Authority: <strong>Tahsildar Ramanagara</strong></span>
+                  </div>
+                  <span className="font-mono text-[10px] text-slate-400">Sec-108A</span>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between">
+                  <Link
+                    href="/search/1"
+                    className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1"
+                  >
+                    <span>View Full Certificate Details</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link
+                    href="/verify"
+                    className="px-3 py-1.5 rounded text-xs font-semibold text-[#12304A] bg-[#FAF9F5] border border-[#CBD5E1] hover:bg-[#E2E8F0]/60 transition-colors"
+                  >
+                    Verify Seal
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. HOW CAN WE HELP YOU TODAY? (4 Institutional Service Cards) */}
+      <section className="space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#12304A] tracking-tight">
+            How can we help you today?
+          </h2>
+          <p className="text-sm text-[#475569]">
+            Select an official land records service to locate, digitize, or verify property titles.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={loadDocuments}
-            disabled={loading}
-            className="flex items-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Service 1: Search */}
           <Link
-            href="/upload"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm transition-colors"
+            href="/search"
+            className="group bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-xs hover:border-[#0F766E] hover:shadow-sm transition-all flex flex-col justify-between"
           >
-            <Upload className="w-4 h-4" />
-            Upload Document
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-lg bg-[#DFF3EF] text-[#0F766E] flex items-center justify-center">
+                <Search className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#12304A] group-hover:text-[#0F766E] transition-colors">
+                1. Search Land Record
+              </h3>
+              <p className="text-xs text-[#475569] leading-relaxed">
+                Find official Record of Rights (RTC/Pahani) by entering survey number, property ID, or owner name.
+              </p>
+            </div>
+            <div className="pt-4 flex items-center gap-1 text-xs font-bold text-[#0F766E]">
+              <span>Search Registry</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Service 2: Digitize */}
+          <Link
+            href="/digitize"
+            className="group bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-xs hover:border-[#0F766E] hover:shadow-sm transition-all flex flex-col justify-between"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-lg bg-[#DFF3EF] text-[#0F766E] flex items-center justify-center">
+                <UploadCloud className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#12304A] group-hover:text-[#0F766E] transition-colors">
+                2. Digitize Old Document
+              </h3>
+              <p className="text-xs text-[#475569] leading-relaxed">
+                Upload historical paper deeds or scanned Kannada land documents for automated Indic OCR parsing.
+              </p>
+            </div>
+            <div className="pt-4 flex items-center gap-1 text-xs font-bold text-[#0F766E]">
+              <span>Start Digitization</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Service 3: Track */}
+          <Link
+            href="/track"
+            className="group bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-xs hover:border-[#0F766E] hover:shadow-sm transition-all flex flex-col justify-between"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-lg bg-[#DFF3EF] text-[#0F766E] flex items-center justify-center">
+                <Clock className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#12304A] group-hover:text-[#0F766E] transition-colors">
+                3. Track a Request
+              </h3>
+              <p className="text-xs text-[#475569] leading-relaxed">
+                Check the real-time status of your digitized documents and official verification workflow.
+              </p>
+            </div>
+            <div className="pt-4 flex items-center gap-1 text-xs font-bold text-[#0F766E]">
+              <span>Track Application</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Service 4: Verify */}
+          <Link
+            href="/verify"
+            className="group bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-xs hover:border-[#0F766E] hover:shadow-sm transition-all flex flex-col justify-between"
+          >
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-lg bg-[#DFF3EF] text-[#0F766E] flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#12304A] group-hover:text-[#0F766E] transition-colors">
+                4. Verify a Record
+              </h3>
+              <p className="text-xs text-[#475569] leading-relaxed">
+                Validate document authenticity via SHA-256 cryptographic signatures and business rules.
+              </p>
+            </div>
+            <div className="pt-4 flex items-center gap-1 text-xs font-bold text-[#0F766E]">
+              <span>Verify Digital Seal</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
           </Link>
         </div>
-      </div>
+      </section>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Documents</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{totalCount}</p>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-            <FileText className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Completed</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{completedCount}</p>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Processing</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{processingCount}</p>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-            <Loader2 className={`w-5 h-5 ${processingCount > 0 ? "animate-spin" : ""}`} />
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-rose-600 uppercase tracking-wider">Failed</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{failedCount}</p>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
-            <p className="text-sm font-medium">{error}</p>
-          </div>
-          <button onClick={loadDocuments} className="text-xs font-semibold text-rose-800 underline hover:no-underline">
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Search & Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by filename or extracted fields (e.g. Acme, 1350, INV-2026)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-300 shadow-sm text-xs font-semibold">
-          {["ALL", "COMPLETED", "PROCESSING", "FAILED"].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                statusFilter === st
-                  ? "bg-indigo-600 text-white shadow-xs"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {st}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Search Status Indicator */}
-      {searchTerm && (
-        <div className="text-xs text-slate-500 flex items-center justify-between">
-          <p>
-            {searching ? (
-              <span className="flex items-center gap-1.5 text-indigo-600 font-medium">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Searching PostgreSQL database...
-              </span>
-            ) : (
-              <span>
-                Found <strong className="text-slate-900">{displayList.length}</strong> results for &ldquo;{searchTerm}&rdquo;
-              </span>
-            )}
+      {/* 3. HOW IT WORKS (3 Simple Steps) */}
+      <section className="bg-white rounded-xl border border-[#E2E8F0] p-8 sm:p-10 shadow-xs space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h2 className="text-2xl font-bold text-[#12304A] tracking-tight">
+            Simple steps to get your verified record
+          </h2>
+          <p className="text-xs sm:text-sm text-[#475569]">
+            Our AI-powered spatial pipeline transforms scanned land records into legally admissible digital certificates.
           </p>
         </div>
-      )}
 
-      {/* Documents Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {loading && documents.length === 0 ? (
-          <div className="py-16 text-center text-slate-500">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-indigo-600 mb-3" />
-            <p className="text-sm font-medium">Connecting to FastAPI and loading documents...</p>
-          </div>
-        ) : displayList.length === 0 ? (
-          <div className="py-16 text-center text-slate-500">
-            <FileText className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-            <p className="text-base font-semibold text-slate-800">No documents found</p>
-            <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              {searchTerm
-                ? `No documents matched "${searchTerm}". Try searching for a different vendor, invoice number, or filename.`
-                : "Upload your first PDF or image to start asynchronous extraction."}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Step 1 */}
+          <div className="space-y-3 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-full bg-[#12304A] text-white flex items-center justify-center font-bold text-sm shadow-xs mx-auto sm:mx-0">
+              1
+            </div>
+            <h3 className="text-base font-bold text-[#12304A]">Search or Upload</h3>
+            <p className="text-xs text-[#475569] leading-relaxed">
+              Enter your survey number or upload a scan/photo of your physical land deed or Record of Rights.
             </p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-4">ID</th>
-                  <th className="py-3.5 px-4">Document & Matches</th>
-                  <th className="py-3.5 px-4">SHA-256 Hash</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Uploaded At</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-normal">
-                {displayList.map((doc) => {
-                  const searchItem = "matched_fields" in doc ? (doc as DocumentSearchItem) : null;
-                  return (
-                    <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-semibold text-slate-900">#{doc.id}</td>
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-1">
-                          <Link
-                            href={`/documents/${doc.id}`}
-                            className="font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5"
-                          >
-                            <FileText className="w-4 h-4 text-slate-400" />
-                            {doc.filename}
-                          </Link>
 
-                          {/* Matched Fields Provenance Badges */}
-                          {searchItem && searchItem.matched_fields && searchItem.matched_fields.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-0.5">
-                              {searchItem.matched_fields.slice(0, 3).map((f) => (
-                                <span
-                                  key={f.id}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200"
-                                >
-                                  <Tag className="w-3 h-3 text-amber-600" />
-                                  <span className="font-semibold">{f.field_name}:</span> {f.normalized_value || f.original_value}
-                                </span>
-                              ))}
-                              {searchItem.matched_fields.length > 3 && (
-                                <span className="text-[11px] text-slate-400 font-medium self-center">
-                                  +{searchItem.matched_fields.length - 3} more
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
-                        {doc.file_hash.substring(0, 16)}...
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <StatusBadge status={doc.status} />
-                      </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-500">
-                        {new Date(doc.created_at).toLocaleString()}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/documents/${doc.id}`}
-                            className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                            title="View Details & Extracted Results"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                          <a
-                            href={getDirectDownloadUrl(doc.id)}
-                            className="p-1.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-                            title="Download from MinIO"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                          <button
-                            onClick={() => handleDelete(doc.id, doc.filename)}
-                            disabled={deletingId === doc.id}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors disabled:opacity-50"
-                            title="Delete Document"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          {/* Step 2 */}
+          <div className="space-y-3 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-full bg-[#0F766E] text-white flex items-center justify-center font-bold text-sm shadow-xs mx-auto sm:mx-0">
+              2
+            </div>
+            <h3 className="text-base font-bold text-[#12304A]">Automatic Reading</h3>
+            <p className="text-xs text-[#475569] leading-relaxed">
+              The Indic OCR model extracts survey boundaries, owner names, land classifications, and bounding coordinates.
+            </p>
           </div>
-        )}
-      </div>
+
+          {/* Step 3 */}
+          <div className="space-y-3 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-full bg-[#059669] text-white flex items-center justify-center font-bold text-sm shadow-xs mx-auto sm:mx-0">
+              3
+            </div>
+            <h3 className="text-base font-bold text-[#12304A]">Official Verified Copy</h3>
+            <p className="text-xs text-[#475569] leading-relaxed">
+              Review extracted fields against physical documents and download the certified digital title with cryptographic hash.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. RECENT DIGITIZED LAND RECORDS REGISTRY */}
+      {featuredRecords.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#12304A] tracking-tight">
+                Recently Digitized Land Records
+              </h3>
+              <p className="text-xs text-[#475569]">
+                Live records active in the official digital title registry.
+              </p>
+            </div>
+            <Link
+              href="/search"
+              className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1"
+            >
+              <span>View All Records</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {featuredRecords.slice(0, 3).map((rec) => (
+              <div
+                key={rec.id}
+                className="bg-white rounded-lg border border-[#E2E8F0] p-4 shadow-xs hover:border-[#0F766E]/60 transition-all flex flex-col justify-between space-y-3"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-bold text-[#12304A]">
+                      Sy. {rec.survey_number}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#D1FAE5] text-[#065F46]">
+                      {rec.status}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-[#12304A] truncate">{rec.owner_name}</h4>
+                  <p className="text-[11px] text-[#475569] truncate">
+                    {rec.village}, {rec.taluk} &bull; {rec.total_area_text}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-[#475569]">
+                    {new Date(rec.registration_date).toLocaleDateString()}
+                  </span>
+                  <Link
+                    href={`/search/${rec.id}`}
+                    className="text-xs font-bold text-[#0F766E] hover:underline flex items-center gap-1"
+                  >
+                    <span>View Record</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 5. CITIZEN SUPPORT SECTION */}
+      <section className="bg-[#FAF9F5] border border-[#E2E8F0] rounded-xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="space-y-2 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2">
+            <Building2 className="w-5 h-5 text-[#0F766E]" />
+            <h3 className="text-lg font-bold text-[#12304A]">
+              Need help with your property details?
+            </h3>
+          </div>
+          <p className="text-xs text-[#475569] max-w-lg leading-relaxed">
+            Contact your local Taluk Revenue Inspector or call the national digital land records toll-free helpdesk for assistance.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+          <a
+            href="tel:18001802024"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-xs font-bold text-white bg-[#12304A] hover:bg-[#1A3F61] transition-colors"
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-[#38BDF8]" />
+            <span>Toll-Free: 1800-180-2024</span>
+          </a>
+          <Link
+            href="/help"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded text-xs font-bold text-[#12304A] bg-white border border-[#CBD5E1] hover:bg-slate-50 transition-colors"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-[#0F766E]" />
+            <span>Search FAQs & Help</span>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

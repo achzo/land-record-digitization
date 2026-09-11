@@ -21,6 +21,12 @@ class ExtractedFieldItem(BaseModel):
     confidence_score: float = Field(..., ge=0.0, le=1.0, description="Confidence score between 0.0 and 1.0")
     source_page: int = Field(default=1, ge=1, description="Page number where field was located")
     bounding_box: Optional[BoundingBox] = Field(default=None, description="Spatial coordinates on the page")
+    candidates: Optional[List[Dict[str, Any]]] = Field(default=None, description="Alternative beam search candidates")
+    language_script: Optional[str] = Field(default="kannada_handwritten", description="Language and script identifier")
+    crop_image_bytes: Optional[bytes] = Field(default=None, description="Raw binary crop of the field segment")
+    review_status: str = Field(default="UNREVIEWED", description="Human review status")
+    model_version: Optional[str] = Field(default="kannada-trocr-prod-v1.0", description="OCR model version used")
+    preprocessing_version: Optional[str] = Field(default="person-a-v1.0", description="Preprocessing version")
 
 
 class ProcessingResult(BaseModel):

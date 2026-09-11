@@ -1,0 +1,10 @@
+{
+  "sample_id": "doc_6_field_7",
+  "status": "VERIFIED",
+  "verified_text": "ಹಾಸನ",
+  "verified_by_human": true,
+  "reviewer_id": 5,
+  "verified_at": "2026-09-11T11:05:03.598472+00:00",
+  "split": "TRAIN",
+  "verified_crop_path": null
+}

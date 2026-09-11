@@ -1,6 +1,14 @@
 import io
 import time
+import sys
+from pathlib import Path
 import pytest
+
+# Ensure repository root is on sys.path so modules like `training` can be imported
+repo_root = str(Path(__file__).resolve().parent.parent.parent)
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import sessionmaker

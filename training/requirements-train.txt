@@ -1,0 +1,19 @@
+# Machine Learning & Training Dependencies for Kannada TrOCR Baseline
+# Install with: pip install -r training/requirements-train.txt
+
+# PyTorch & Computer Vision
+torch>=2.1.0
+torchvision>=0.16.0
+
+# HuggingFace Ecosystem
+transformers>=4.38.0
+datasets>=2.16.0
+accelerate>=0.27.0
+evaluate>=0.4.0
+
+# Image Processing & OCR Metrics
+pillow>=10.0.0
+jiwer>=3.0.0
+unicodedata2>=15.1.0
+pyyaml>=6.0.1
+tqdm>=4.66.0

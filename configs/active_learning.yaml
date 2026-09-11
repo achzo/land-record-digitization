@@ -1,0 +1,6 @@
+﻿active_learning:
+  enabled: true
+  min_verified_samples_for_training: 20
+  validation_split: 0.15
+  min_improvement: 0.01
+  auto_train: false

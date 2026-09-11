@@ -1,0 +1,7 @@
+{
+  "sample_id": "doc_4_field_5",
+  "status": "REJECTED",
+  "rejected_by_reviewer_id": 5,
+  "rejected_at": "2026-09-11T11:05:03.532271+00:00",
+  "rejection_reason": "Crop unreadable due to ink blot"
+}
